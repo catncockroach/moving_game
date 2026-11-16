@@ -41,7 +41,7 @@ The game starts on your first move. Your best score is saved in the browser.
   - butterflies, a passing flock of birds, falling leaves
 - **Rocks:** procedural mossy rocks with a ground shadow that grows as they fall. They shatter into debris and dust on impact, with a small camera shake.
 - **Sound:** all synthesised with WebAudio (wind, birdsong or crickets, impacts, chimes), so there are no audio files. A mute button is in the corner.
-- **Themes:** Day (default), Sunset, Autumn and Night, using the colour dots in the top-right corner. Changes blend smoothly.
+- **Weather follows your score:** every run starts on a lush green day. Every 8–10 points the scene drifts to the next look: Day → Autumn → Sunset → Night → Day, and so on. Each change blends over about 3.5 seconds (sky, light, sun and moon, fog, leaves, grass, sounds). Starting a new run brings back the green day.
 - **The game UI has no guide text.** It shows only icons, the score and the game-over card.
 
 ## Works anywhere GitHub Pages does
@@ -80,7 +80,7 @@ Opening the file directly with `file://` does not work, because browsers block E
 index.html          new 3D game
 css/style.css       HUD / overlays
 js/main.js          renderer, game loop, states, camera, adaptive quality
-js/core/            shared uniforms + GLSL noise/wind, themes, post-processing, audio, UI/input, canvas textures
+js/core/            shared uniforms + GLSL noise/wind, weather palettes, post-processing, audio, UI/input, canvas textures
 js/world/           sky, terrain + ridges, grass, flowers, trees, ambient life
 js/game/            fox (player), rocks, effects (dust / debris)
 models/Fox.glb      animated fox

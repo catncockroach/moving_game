@@ -5,17 +5,13 @@ export class UI {
     this.el = {
       score: $('score'), best: $('best'), best2: $('best2'), final: $('final'), newbest: $('newbest'),
       over: $('over'), paused: $('paused'), restart: $('restart'), resume: $('resume'),
-      sound: $('sound'), themes: $('themes'), loadbar: $('loadbar'), hint: $('hint'), touch: $('touch'),
+      sound: $('sound'), loadbar: $('loadbar'), hint: $('hint'), touch: $('touch'),
     };
     this.lastScore = -1;
     this.handlers = {};
     this.el.restart.addEventListener('click', () => this.emit('restart'));
     this.el.resume.addEventListener('click', () => this.emit('resume'));
     this.el.sound.addEventListener('click', () => this.emit('sound'));
-    this.el.themes.addEventListener('click', (e) => {
-      const b = e.target.closest('[data-theme]');
-      if (b) this.emit('theme', b.dataset.theme);
-    });
     // keep focus off buttons so Space never "clicks" them
     document.querySelectorAll('button').forEach((b) => b.addEventListener('mouseup', () => b.blur()));
   }
@@ -40,15 +36,6 @@ export class UI {
   setBest(n) {
     this.el.best.textContent = n;
     this.el.best2.textContent = n;
-  }
-
-  setTheme(name) {
-    this.el.themes.querySelectorAll('[data-theme]').forEach((b) => {
-      const on = b.dataset.theme === name;
-      b.classList.toggle('active', on);
-      b.setAttribute('aria-checked', on ? 'true' : 'false');
-      b.setAttribute('role', 'radio');
-    });
   }
 
   setMuted(m) { this.el.sound.classList.toggle('muted', m); }
