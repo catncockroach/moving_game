@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { shared } from './core/shared.js';
-import { Theme, PALETTES } from './core/theme.js';
+import { Theme } from './core/theme.js';
 import { createPost } from './core/post.js';
 import { Audio } from './core/audio.js';
 import { UI, Input } from './core/ui.js';
@@ -52,10 +52,7 @@ renderer.toneMappingExposure = 1;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFShadowMap;
 
-let savedTheme = 'day';
-try { savedTheme = localStorage.getItem('mg-theme') || 'day'; } catch (e) { /* ignore */ }
-if (params.get('theme')) savedTheme = params.get('theme');
-const theme = new Theme(PALETTES[savedTheme] ? savedTheme : 'day');
+const theme = new Theme('day');
 shared.uSunColor.value = theme.cur.sunColor;
 
 const scene = new THREE.Scene();
@@ -88,7 +85,6 @@ scene.add(hemi);
 const ui = new UI();
 const input = new Input(canvas);
 const audio = new Audio();
-ui.setTheme(theme.name);
 ui.setMuted(audio.muted);
 let best = 0;
 try { best = Number(localStorage.getItem('mg-best')) || 0; } catch (e) { /* ignore */ }
@@ -226,6 +222,7 @@ function startRun() {
   game.state = 'playing';
   game.elapsed = 0;
   game.score = 0;
+  weather.next = weatherSpan();
   ui.setScore(0);
   ui.setReady(false);
 }
@@ -254,6 +251,7 @@ function restart() {
   ui.hideOver();
   rocks.clear();
   fox.revive();
+  setWeather(0);
   game.state = 'ready';
   game.score = 0;
   game.elapsed = 0;
@@ -280,13 +278,21 @@ input.on('tap', () => { if (game.state === 'over' && performance.now() - game.ov
 ui.on('restart', () => { audio.unlock(); restart(); });
 ui.on('resume', () => pause(false));
 ui.on('sound', () => { audio.unlock(); audio.setMuted(!audio.muted); ui.setMuted(audio.muted); });
-ui.on('theme', (name) => {
-  theme.set(name);
-  ui.setTheme(name);
-  audio.setMode(name);
-  try { localStorage.setItem('mg-theme', name); } catch (e) { /* ignore */ }
-});
 audio.setMode(theme.name);
+
+/* ------------------------------------------------------------------ */
+/* Weather follows the score                                           */
+/* Every 8–10 points the scene drifts to the next look (~3.5 s blend), */
+/* and it returns to the lush green day when a new run starts.        */
+/* ------------------------------------------------------------------ */
+const WEATHER = ['day', 'autumn', 'sunset', 'night'];
+const weather = { idx: 0, next: 0 };
+const weatherSpan = () => 8 + Math.floor(Math.random() * 3); // 8, 9 or 10 points
+function setWeather(idx) {
+  weather.idx = idx % WEATHER.length;
+  theme.set(WEATHER[weather.idx]);
+  audio.setMode(WEATHER[weather.idx]);
+}
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
 // mobile browsers may drop the GPU context in the background: simply start fresh when it comes back
 canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); pause(true); });
@@ -340,7 +346,7 @@ function frame(renderThis) {
   // theme transition
   if (theme.update(realDt)) {
     envTimer -= realDt;
-    if (envTimer <= 0 || theme.t >= 1) { refreshEnvironment(); envTimer = 0.35; }
+    if (envTimer <= 0 || theme.t >= 1) { refreshEnvironment(); envTimer = 0.9; }
   }
   const c = theme.cur;
   sky.update(theme);
@@ -373,6 +379,10 @@ function frame(renderThis) {
         game.score = s;
         ui.setScore(s);
         if (s > 0 && s % 10 === 0) audio.chime();
+        if (s >= weather.next) {
+          setWeather(weather.idx + 1);
+          weather.next = s + weatherSpan();
+        }
       }
     }
     const hitTest = game.state === 'playing' ? (r) => {
@@ -479,7 +489,7 @@ async function boot() {
   requestAnimationFrame(frame);
   setTimeout(() => ui.loaded(), 120);
   if (MANUAL || params.has('debug')) window.__game = {
-    game, fox, rocks, theme, view, renderer, camera, quality, tier, input,
+    game, fox, rocks, theme, weather, view, renderer, camera, quality, tier, input,
     step(n = 1, noRender = false) {
       for (let i = 0; i < n; i++) frame(!noRender && i === n - 1);
     },

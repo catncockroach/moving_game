@@ -80,13 +80,16 @@ export class Theme {
     this.from = null;
     this.to = null;
     this.t = 1;
+    this.duration = 3.5;
     this.sunDir = new THREE.Vector3();
     this.computeSun();
   }
 
-  set(name) {
+  /** Blend towards another palette over `duration` seconds (default 3.5 s). */
+  set(name, duration = 3.5) {
     if (!PALETTES[name] || name === this.name) return;
     this.name = name;
+    this.duration = Math.max(0.01, duration);
     this.from = {};
     for (const [k, v] of Object.entries(this.cur)) this.from[k] = v && v.isColor ? v.clone() : v;
     this.to = materialise(PALETTES[name]);
@@ -96,7 +99,7 @@ export class Theme {
   /** Returns true while a transition is in progress. */
   update(dt) {
     if (this.t >= 1) return false;
-    this.t = Math.min(1, this.t + dt / 1.8);
+    this.t = Math.min(1, this.t + dt / this.duration);
     const k = this.t * this.t * (3 - 2 * this.t);
     for (const key of Object.keys(this.cur)) {
       const a = this.from[key], b = this.to[key];

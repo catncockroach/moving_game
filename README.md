@@ -41,7 +41,7 @@ The game starts on your first move. Your best score is saved in the browser.
   - butterflies, a passing flock of birds, falling leaves
 - **Rocks:** procedural mossy rocks with a ground shadow that grows as they fall. They shatter into debris and dust on impact, with a small camera shake.
 - **Sound:** all synthesised with WebAudio (wind, birdsong or crickets, impacts, chimes), so there are no audio files. A mute button is in the corner.
-- **Themes:** Day (default), Sunset, Autumn and Night, using the colour dots in the top-right corner. Changes blend smoothly.
+- **Weather follows your score:** every run starts on a lush green day. Every 8–10 points the scene drifts to the next look: Day → Autumn → Sunset → Night → Day, and so on. Each change blends over about 3.5 seconds (sky, light, sun and moon, fog, leaves, grass, sounds). Starting a new run brings back the green day.
 - **The game UI has no guide text.** It shows only icons, the score and the game-over card.
 
 ## Works anywhere GitHub Pages does
@@ -54,10 +54,12 @@ The game starts on your first move. Your best score is saved in the browser.
 
 ## Deploy to GitHub Pages
 
-Choose **one** of these:
+GitHub Pages has to be switched on once in the repository settings. The workflow's built-in token is not allowed to do this. Choose **one** source:
 
-1. **GitHub Actions (recommended):** in *Settings → Pages → Build and deployment*, set **Source** to **GitHub Actions**. The workflow `.github/workflows/pages.yml` deploys on every push to `main`. You can also run it by hand from the *Actions* tab.
-2. **Deploy from a branch:** set **Source** to *Deploy from a branch*, then choose `main` and `/ (root)`. The site is fully static, and `.nojekyll` is included.
+1. **GitHub Actions (recommended):** open *Settings → Pages → Build and deployment* and set **Source** to **GitHub Actions**. Then open the *Actions* tab, choose **Deploy to GitHub Pages**, and click **Re-run all jobs** (or **Run workflow**). After that, every push to `main` deploys automatically.
+2. **Deploy from a branch:** set **Source** to *Deploy from a branch*, then choose `main` and `/ (root)`. The site is fully static and `.nojekyll` is included. With this option the workflow only reports a notice and skips the deploy.
+
+If Pages is still off, the workflow stops with a clear "GitHub Pages is not enabled" message.
 
 The site will be at `https://<user>.github.io/moving_game/`, with the original at `https://<user>.github.io/moving_game/original/`.
 
@@ -78,7 +80,7 @@ Opening the file directly with `file://` does not work, because browsers block E
 index.html          new 3D game
 css/style.css       HUD / overlays
 js/main.js          renderer, game loop, states, camera, adaptive quality
-js/core/            shared uniforms + GLSL noise/wind, themes, post-processing, audio, UI/input, canvas textures
+js/core/            shared uniforms + GLSL noise/wind, weather palettes, post-processing, audio, UI/input, canvas textures
 js/world/           sky, terrain + ridges, grass, flowers, trees, ambient life
 js/game/            fox (player), rocks, effects (dust / debris)
 models/Fox.glb      animated fox
