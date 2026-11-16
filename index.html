@@ -1,23 +1,116 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moving Game</title>
-    <link rel="stylesheet" href="design.css">
-    <link rel="icon" href="./assets/favicon.png" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <title>Moving Game</title>
+  <meta name="description" content="Moving Game — a small fox dodging falling rocks in a living, breathing forest meadow.">
+  <meta name="theme-color" content="#2e5e35">
+  <link rel="icon" href="./assets/favicon.png" type="image/png">
+  <link rel="preload" href="./fonts/fredoka-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="./css/style.css">
+
+  <!-- Old browsers without import maps / WebGL go to the original version -->
+  <script>
+    (function () {
+      var ok = false;
+      try {
+        var c = document.createElement('canvas');
+        ok = !!(window.WebGL2RenderingContext && c.getContext('webgl2')) || !!c.getContext('webgl');
+        ok = ok && HTMLScriptElement.supports && HTMLScriptElement.supports('importmap');
+      } catch (e) { ok = false; }
+      if (!ok) location.replace('./original/');
+    })();
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three/three.module.min.js",
+        "three/addons/": "./vendor/three/addons/"
+      }
+    }
+  </script>
+  <link rel="modulepreload" href="./vendor/three/three.module.min.js">
 </head>
-<body>
-    <div id="infor_block">
-        <div class="infors" id="name">MOVING GAME</div>
-        <div>Author: HaiHv</div>
-        <div class="infors" id="score_text">SCORE: </div>
-        <div class="infors" id="score_block">0</div>
+<body class="loading">
+  <canvas id="scene" aria-label="Moving Game"></canvas>
+  <div id="vignette" aria-hidden="true"></div>
+
+  <header id="hud">
+    <div class="brand">
+      <span class="brand-title">Moving Game</span>
+      <span class="brand-author">by HaiHv</span>
     </div>
-    <div class="gameblock">
-        <canvas id="gameCanvas" width="800" height="350"></canvas>
-        <button id="restart">&#9658;	RESTART &quest; (space)</button>
+
+    <div class="scorebox" aria-live="polite">
+      <div id="score" class="score">0</div>
+      <div class="best">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v2h3v3a4 4 0 0 1-4 4h-.3A6 6 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A6 6 0 0 1 7.3 12H7a4 4 0 0 1-4-4V5h3V3Zm0 4H5v1a2 2 0 0 0 1.1 1.8A6 6 0 0 1 6 9V7Zm12 0v2c0 .3 0 .5-.1.8A2 2 0 0 0 19 8V7h-1Z"/></svg>
+        <span id="best">0</span>
+      </div>
     </div>
-    <script src="maingame.js"></script>
+
+    <div class="tools">
+      <div class="themes" id="themes" role="radiogroup" aria-label="Theme">
+        <button class="swatch" data-theme="day" title="Day" aria-label="Day"></button>
+        <button class="swatch" data-theme="sunset" title="Sunset" aria-label="Sunset"></button>
+        <button class="swatch" data-theme="autumn" title="Autumn" aria-label="Autumn"></button>
+        <button class="swatch" data-theme="night" title="Night" aria-label="Night"></button>
+      </div>
+      <button id="sound" class="icon-btn" title="Sound" aria-label="Sound">
+        <svg class="on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Zm-2.5-8.7v2.1a7 7 0 0 1 0 13.2v2.1a9 9 0 0 0 0-17.4Z"/></svg>
+        <svg class="off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4Zm12.6 3 2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4-2.7-2.7Z"/></svg>
+      </button>
+      <a id="classic" class="icon-btn" href="./original/" title="Original version" aria-label="Original version">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18v12H3V6Zm2 2v8h14V8H5Zm2 2h2v1h1v2H9v1H7v-1H6v-2h1v-1Zm8 0h2v2h-2v-2Zm-2 2h2v2h-2v-2Z"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <div id="hint" aria-hidden="true">
+    <span class="chev left"></span>
+    <span class="chev right"></span>
+  </div>
+
+  <div id="touch" aria-hidden="true">
+    <button class="pad" data-dir="-1" tabindex="-1"><svg viewBox="0 0 24 24"><path d="M15.4 5.4 14 4l-8 8 8 8 1.4-1.4L8.8 12z"/></svg></button>
+    <button class="pad" data-dir="1" tabindex="-1"><svg viewBox="0 0 24 24"><path d="m8.6 5.4 1.4-1.4 8 8-8 8-1.4-1.4 6.6-6.6z"/></svg></button>
+  </div>
+
+  <div id="over" class="overlay" hidden>
+    <div class="card">
+      <div class="card-title">Game Over</div>
+      <div id="final" class="final">0</div>
+      <div class="best best-lg">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v2h3v3a4 4 0 0 1-4 4h-.3A6 6 0 0 1 13 15.9V18h3v3H8v-3h3v-2.1A6 6 0 0 1 7.3 12H7a4 4 0 0 1-4-4V5h3V3Zm0 4H5v1a2 2 0 0 0 1.1 1.8A6 6 0 0 1 6 9V7Zm12 0v2c0 .3 0 .5-.1.8A2 2 0 0 0 19 8V7h-1Z"/></svg>
+        <span id="best2">0</span>
+        <span id="newbest" class="newbest" hidden>★</span>
+      </div>
+      <button id="restart" class="round-btn" aria-label="Restart">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6l5 4V7a5 5 0 1 1-5 5H5a7 7 0 1 0 7-7Z"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="paused" class="overlay" hidden>
+    <button id="resume" class="round-btn big" aria-label="Resume">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+  </div>
+
+  <div id="loader">
+    <div class="loader-leaf">
+      <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M52 10C30 10 12 22 12 42c0 4 1 8 3 11 2-11 9-21 21-27-10 8-16 17-18 29 3 1 6 2 10 2 18 0 24-20 24-47Z"/></svg>
+    </div>
+    <div class="loader-bar"><i id="loadbar"></i></div>
+  </div>
+
+  <noscript><a class="noscript" href="./original/">Moving Game (original)</a></noscript>
+
+  <script type="module" src="./js/main.js"></script>
+  <!--
+    Credits: Fox model — PixelMannen (CC0), rigging & animation by tomkranis (CC-BY 4.0),
+    glTF conversion by @AsoboStudio and @scurest (CC-BY 4.0). Three.js (MIT). Fredoka font (OFL).
+  -->
 </body>
 </html>
