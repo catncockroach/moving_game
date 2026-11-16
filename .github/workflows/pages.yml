@@ -15,7 +15,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Works with either Pages source:
+  #  - "GitHub Actions"        -> this workflow deploys the site
+  #  - "Deploy from a branch"  -> GitHub publishes the branch itself, nothing to do here
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.pages.outputs.mode }}
+    steps:
+      - id: pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mode=$(gh api "repos/${{ github.repository }}/pages" --jq '.build_type' 2>/dev/null || echo none)
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          case "$mode" in
+            workflow) echo "Pages source is GitHub Actions: deploying." ;;
+            legacy)   echo "::notice title=Pages deploys from a branch::GitHub publishes the branch directly, so this workflow has nothing to do." ;;
+            *)        echo "::error title=GitHub Pages is not enabled::Open Settings > Pages > Build and deployment, set Source to 'GitHub Actions', then re-run this workflow."
+                      exit 1 ;;
+          esac
+
   deploy:
+    needs: check
+    if: needs.check.outputs.mode == 'workflow'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
