@@ -70,7 +70,7 @@ export function createFlowers(theme, count) {
       .replace('#include <uv_vertex>', '#include <uv_vertex>\nvMapUv = vMapUv * 0.5 + aAtlas;')
       .replace('#include <beginnormal_vertex>', 'vec3 objectNormal = vec3(0.0, 1.0, 0.25);')
       .replace('#include <begin_vertex>', /* glsl */`
-        vec3 transformed = position * (0.11 * aFlower.z);
+        vec3 transformed = position * (0.14 * aFlower.z);
         transformed.y += aFlower.x;
         vec3 fBase = vec3(instanceMatrix[3][0], instanceMatrix[3][1], instanceMatrix[3][2]);
         transformed.xz += plantBend(fBase, 1.0, aFlower.x, 0.3);

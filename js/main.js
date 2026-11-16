@@ -125,6 +125,7 @@ async function buildWorld() {
     const near = Math.max(0, 1 - Math.abs(r.x - fox.x) / 4);
     game.shake = Math.min(0.3, game.shake + r.r * 0.07 * (0.4 + near));
     audio.thud(r.r, r.x / view.bound, near);
+    shared.uImpact.value.set(r.x, 0, time, Math.min(1, 0.4 + r.r * 0.6));
   };
   progress.world = 1; showProgress();
 }
@@ -217,7 +218,6 @@ const game = {
   dead: 0,
   overAt: 0,
   shake: 0,
-  pausedFrom: null,
   lastFacing: 1,
   dustClock: 0,
 };
@@ -288,11 +288,14 @@ ui.on('theme', (name) => {
 });
 audio.setMode(theme.name);
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+// mobile browsers may drop the GPU context in the background: simply start fresh when it comes back
+canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); pause(true); });
+canvas.addEventListener('webglcontextrestored', () => location.reload());
 
 /* ------------------------------------------------------------------ */
 /* Adaptive quality                                                    */
 /* ------------------------------------------------------------------ */
-const perf = { acc: 0, frames: 0, warm: 3, cooldown: 0 };
+const perf = { acc: 0, frames: 0, warm: 3 };
 function adaptQuality(dt) {
   if (params.get('q') !== null) return;
   if (perf.warm > 0) { perf.warm -= dt; return; }
@@ -302,6 +305,7 @@ function adaptQuality(dt) {
   perf.acc = 0; perf.frames = 0;
   if (avg < 1 / 44) return;
   quality.level++;
+  perf.warm = 2; // let the new settings settle before measuring again
   switch (quality.level) {
     case 1: quality.dprScale = 0.8; resize(); break;
     case 2: grass.count = Math.floor(grass.userData.maxCount * 0.6); break;

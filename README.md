@@ -2,6 +2,8 @@
 
 A small fox dodging falling rocks in a living forest meadow. Built with three.js and WebGL, with no build step.
 
+![Moving Game — new version](assets/preview.jpg)
+
 - **New version (3D):** `index.html` at the site root
 - **Original version (2D canvas):** [`original/`](original/), kept exactly as it was and still playable on GitHub Pages at `/original/`
 

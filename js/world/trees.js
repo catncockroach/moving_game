@@ -81,7 +81,7 @@ class Builder {
       const rot = rng() * Math.PI * 2;
       const hN = Math.max(0, (p.y - base.y) / H);
       const bend = Math.pow(Math.min(hN, 1.3), 1.5) * H / 6;
-      const vi = Math.random() < 0.12 ? (variant + 1) % 4 : variant;
+      const vi = rng() < 0.12 ? (variant + 1) % 4 : variant;
       const start = cd.pos.length / 3;
       const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
       for (const [cx, cy] of corners) {

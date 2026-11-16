@@ -10,6 +10,8 @@ export const shared = {
   uWindStrength: { value: 1 },
   // xyz = player position, w = how strongly the player pushes the grass
   uPlayer: { value: new THREE.Vector4(0, 0, 0, 1) },
+  // last rock impact: x, z, time, strength — sends a ripple through the grass
+  uImpact: { value: new THREE.Vector4(0, 0, -100, 0) },
   // direction towards the sun (world space) and in view space
   uSunDir: { value: new THREE.Vector3(-0.6, 0.65, -0.3).normalize() },
   uSunView: { value: new THREE.Vector3(0, 1, 0) },

@@ -37,12 +37,19 @@ function bladeGeometry() {
 /** Shared GLSL for anything planted in the ground that bends with the wind and the player. */
 export const GLSL_PLANT = /* glsl */`
 uniform vec4 uPlayer;
+uniform vec4 uImpact;
 vec2 plantBend(vec3 base, float t, float h, float stiff){
   vec2 w = windField(base.xz) * stiff;
   vec2 d = base.xz - uPlayer.xz;
   float pd = length(d);
   float push = (1.0 - smoothstep(0.2, 1.05, pd)) * uPlayer.w;
   w += (d / max(pd, 1e-3)) * push * 1.1;
+  // expanding ripple from the last rock impact
+  vec2 di = base.xz - uImpact.xy;
+  float id = length(di);
+  float age = uTime - uImpact.z;
+  float front = 1.0 - smoothstep(0.0, 0.9, abs(id - age * 7.0));
+  w += (di / max(id, 1e-3)) * front * uImpact.w * max(0.0, 1.0 - age * 1.4) * exp(-id * 0.25) * 1.6;
   return w * t * t * h;
 }
 `;

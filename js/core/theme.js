@@ -48,9 +48,9 @@ export const PALETTES = {
     dust: '#cfac80',
   },
   night: {
-    skyTop: '#0b1530', skyHorizon: '#2d4670', sunDisk: '#f4f2ff', sunGlow: '#7088cc', sunDiskVis: 0.5,
+    skyTop: '#0b1530', skyHorizon: '#2d4670', sunDisk: '#f4f2ff', sunGlow: '#5a70b0', sunDiskVis: 0.5,
     cloud: '#4a5a80', cloudShade: '#1c2640', cloudCover: 0.32, stars: 1,
-    sunColor: '#a9bcff', sunIntensity: 1.9, sunElev: 13, sunAzim: -160,
+    sunColor: '#a9bcff', sunIntensity: 1.6, sunElev: 21, sunAzim: -160,
     hemiSky: '#6a84c4', hemiGround: '#24362e', hemiIntensity: 1.05, envIntensity: 0.6,
     fog: '#22365a', fogDensity: 0.012,
     ground1: '#1f3d2a', ground2: '#2c5032', path: '#5d5866',
@@ -59,7 +59,7 @@ export const PALETTES = {
     hill: '#203a42', mountain: '#2c4566', hillHaze: 0.4, mountainHaze: 0.62,
     motes: '#d6ff7a', moteMode: 1, flowerGlow: 0.6,
     exposure: 1.25, bloom: 0.7, saturation: 1.05, contrast: 1.04, tint: '#e8f0ff', wind: 0.6,
-    dust: '#8c8aa0',
+    dust: '#4c4c60',
   },
 };
 
