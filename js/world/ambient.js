@@ -1,9 +1,15 @@
 import * as THREE from 'three';
 import { shared } from '../core/shared.js';
+import { PALETTES } from '../core/theme.js';
 import { butterflyTexture, singleLeafTexture } from '../core/textures.js';
 import { heightAt } from './terrain.js';
 
 /* ---------------- Pollen motes (day) / fireflies (night) ---------------- */
+// Mode and colour are NOT blended with the theme: blending uMode changes the uTime-based drift
+// speed, which made every mote race sideways during a look change. Instead the motes sink out
+// (uVis 1 -> 0), switch mode + colour while hidden, then rise back (uVis 0 -> 1).
+const MOTE_SINK = 1.3; // seconds (the theme blend itself lasts 3.5 s)
+const MOTE_RISE = 2.0;
 export function createMotes(theme, count) {
   const g = new THREE.BufferGeometry();
   const pos = new Float32Array(count * 3);
@@ -20,8 +26,9 @@ export function createMotes(theme, count) {
     uTime: shared.uTime,
     uWindDir: shared.uWindDir,
     uSunView: shared.uSunView,
-    uColor: { value: theme.cur.motes },
-    uMode: { value: theme.cur.moteMode },
+    uColor: { value: new THREE.Color(PALETTES[theme.name].motes) },
+    uMode: { value: PALETTES[theme.name].moteMode },
+    uVis: { value: 1 },
     uScale: { value: 600 },
   };
   const mat = new THREE.ShaderMaterial({
@@ -31,7 +38,7 @@ export function createMotes(theme, count) {
     blending: THREE.AdditiveBlending,
     vertexShader: /* glsl */`
       attribute vec4 aSeed;
-      uniform float uTime, uMode, uScale;
+      uniform float uTime, uMode, uScale, uVis;
       uniform vec2 uWindDir;
       uniform vec3 uSunView;
       varying float vA;
@@ -44,6 +51,10 @@ export function createMotes(theme, count) {
         p.x += uWindDir.x * drift * 2.0;
         p.x = mod(p.x + 17.0, 34.0) - 17.0;
         p += vec3(sin(uTime * 0.35 + s) * 0.7, sin(uTime * 0.5 + s * 1.7) * 0.35, cos(uTime * 0.3 + s * 1.3) * 0.6);
+        // sink / rise: each mote has its own slot in the fade so they go down and come up one by one
+        float start = aSeed.w * 0.4;
+        float vis = smoothstep(start, start + 0.6, uVis);
+        p.y -= (1.0 - vis) * (1.0 - vis) * 2.2;
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
         float size = mix(0.035 + aSeed.z * 0.03, 0.09 + aSeed.z * 0.05, uMode);
@@ -52,6 +63,7 @@ export function createMotes(theme, count) {
         float blink = smoothstep(0.35, 1.0, sin(uTime * (0.9 + aSeed.w) + s * 6.0));
         float glint = 0.35 + 0.65 * pow(max(dot(normalize(mv.xyz), uSunView), 0.0), 3.0);
         vA = mix(glint * (0.55 + 0.45 * aSeed.w), blink, uMode);
+        vA *= vis;
         vA *= (1.0 - smoothstep(-4.0, -1.0, mv.z)); // fade very close to the camera
       }`,
     fragmentShader: /* glsl */`
@@ -70,10 +82,23 @@ export function createMotes(theme, count) {
   const points = new THREE.Points(g, mat);
   points.frustumCulled = false;
   points.renderOrder = 6;
+  let shown = theme.name; // look whose mode/colour the motes currently use
   return {
     object: points,
     setScale(v) { uniforms.uScale.value = v; },
-    update(theme) { uniforms.uMode.value = theme.cur.moteMode; },
+    update(theme, dt) {
+      const vis = uniforms.uVis;
+      if (theme.name !== shown) {
+        vis.value = Math.max(0, vis.value - dt / MOTE_SINK);
+        if (vis.value <= 0) {
+          shown = theme.name;
+          uniforms.uColor.value.set(PALETTES[shown].motes);
+          uniforms.uMode.value = PALETTES[shown].moteMode;
+        }
+      } else if (vis.value < 1) {
+        vis.value = Math.min(1, vis.value + dt / MOTE_RISE);
+      }
+    },
   };
 }
 
