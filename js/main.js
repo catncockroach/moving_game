@@ -352,7 +352,7 @@ function frame(renderThis) {
   sky.update(theme);
   ridges.update(theme);
   flowers.update(theme);
-  motes.update(theme);
+  motes.update(theme, realDt);
   scene.fog.density = c.fogDensity * view.fogScale;
   sun.intensity = c.sunIntensity;
   hemi.intensity = c.hemiIntensity;
